@@ -1,14 +1,30 @@
 # app.py
+import os
 import json
 import streamlit as st
 from recommend import df, recommend_movies
 from omdb_utils import get_movie_details
 
-# Load API key from config
-config = json.load(open("config.json"))
-OMDB_API_KEY = config["OMDB_API_KEY"]
+# --- Load API key from config.json ---
+try:
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    # if app.py is also in src/
+    config_path = os.path.join(current_dir, "config.json")
 
-# Page configuration
+    with open(config_path, "r") as f:
+        config = json.load(f)
+
+    OMDB_API_KEY = config["OMDB_API_KEY"]
+
+except FileNotFoundError:
+    st.error(
+        "❌ `config.json` not found in src/. Please create it with your OMDB API key.")
+    st.stop()
+except KeyError:
+    st.error("❌ 'OMDB_API_KEY' not found in config.json.")
+    st.stop()
+
+# --- Page Configuration ---
 st.set_page_config(
     page_title="Movie Recommender 🎬",
     page_icon="🎥",
@@ -29,12 +45,13 @@ st.markdown("""
         .plot-text {
             font-style: italic;
             color: #444;
+            margin-bottom: 12px;
         }
         .header {
             text-align: center;
             font-size: 36px;
             font-weight: 700;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             color: #222;
         }
         .recommend-title {
@@ -46,9 +63,10 @@ st.markdown("""
         .stButton>button {
             background-color: #1f77b4;
             color: white;
-            border-radius: 5px;
-            padding: 8px 16px;
+            border-radius: 6px;
+            padding: 10px 20px;
             font-weight: bold;
+            border: none;
         }
         .stSelectbox label {
             font-weight: 600;
@@ -92,5 +110,7 @@ if st.button("🚀 Recommend Similar Movies"):
                     with col2:
                         st.markdown(
                             f'<div class="movie-title">{movie_title}</div>', unsafe_allow_html=True)
-                        st.markdown(f'<div class="plot-text">{plot}</div>' if plot !=
-                                    "N/A" else "_Plot not available_", unsafe_allow_html=True)
+                        st.markdown(
+                            f'<div class="plot-text">{plot}</div>' if plot != "N/A"
+                            else "_Plot not available_", unsafe_allow_html=True
+                        )
