@@ -1,22 +1,26 @@
-
 # recommend.py
+import os
 import joblib
 import logging
 
-# Setup logging
+# Get the absolute path to the directory containing this file (src/)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Setup logging to write to recommend.log inside src/
 logging.basicConfig(
     level=logging.INFO,
     format='[%(asctime)s] %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("recommend.log", encoding="utf-8"),
+        logging.FileHandler(os.path.join(BASE_DIR, "recommend.log"), encoding="utf-8"),
         logging.StreamHandler()
     ]
 )
 
 logging.info("🔁 Loading data...")
 try:
-    df = joblib.load('df_cleaned.pkl')
-    cosine_sim = joblib.load('cosine_sim.pkl')
+    # Load pickle files from the src/ folder explicitly
+    df = joblib.load(os.path.join(BASE_DIR, 'df_cleaned.pkl'))
+    cosine_sim = joblib.load(os.path.join(BASE_DIR, 'cosine_sim.pkl'))
     logging.info("✅ Data loaded successfully.")
 except Exception as e:
     logging.error("❌ Failed to load required files: %s", str(e))
@@ -31,8 +35,7 @@ def recommend_movies(movie_name, top_n=5):
         return None
     idx = idx[0]
     sim_scores = list(enumerate(cosine_sim[idx]))
-    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)[
-        1:top_n + 1]
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)[1:top_n + 1]
     movie_indices = [i[0] for i in sim_scores]
     logging.info("✅ Top %d recommendations ready.", top_n)
     # Create DataFrame with clean serial numbers starting from 1
@@ -41,4 +44,3 @@ def recommend_movies(movie_name, top_n=5):
     result_df.index.name = "S.No."
 
     return result_df
-
